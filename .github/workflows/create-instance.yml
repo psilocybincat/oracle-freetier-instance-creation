@@ -8,7 +8,7 @@ on:
 jobs:
   create-instance:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 360
 
     steps:
       - name: Checkout repository
