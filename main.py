@@ -291,7 +291,9 @@ def handle_errors(command, data, log):
     failure_msg = '\n'.join([f'{key}: {value}' for key, value in data.items()])
     notify_on_failure(failure_msg)
     # Raise an exception for unexpected errors
-    raise Exception("Error: %s" % data)
+        log.warning("Unhandled OCI error, sleeping and retrying: %s", data)
+        time.sleep(WAIT_TIME)
+        return True
 
 
 def execute_oci_command(client, method, *args, **kwargs):
