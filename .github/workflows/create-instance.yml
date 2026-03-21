@@ -61,7 +61,7 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_USER_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          cat > oci.env <<EOF
+          DAY=$(date +%-d); DOW=$(date +%u); if [ "$DOW" -ge 6 ] || { [ "$DAY" -ge 25 ] && [ "$DAY" -le 30 ]; }; then WAIT_SECS=60; else WAIT_SECS=300; fi         cat > oci.env <<EOF
           OCI_CONFIG=$(pwd)/oci_config
           OCT_FREE_AD=$OCT_FREE_AD
           DISPLAY_NAME=$OCI_DISPLAY_NAME
@@ -69,7 +69,7 @@ jobs:
           OCI_IMAGE_ID=$OCI_IMAGE_ID
           SSH_AUTHORIZED_KEYS_FILE=$(pwd)/id_rsa.pub
           OCI_COMPUTE_SHAPE=VM.Standard.A1.Flex
-          REQUEST_WAIT_TIME_SECS=300
+          REQUEST_WAIT_TIME_SECS=$WAIT_SECS
           TELEGRAM_TOKEN=$TELEGRAM_TOKEN
           TELEGRAM_USER_ID=$TELEGRAM_USER_ID
           EOF
