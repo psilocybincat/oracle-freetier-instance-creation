@@ -61,7 +61,9 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_USER_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          DAY=$(date +%-d); DOW=$(date +%u); if [ "$DOW" -ge 6 ] || ( [ "$DAY" -ge 25 ] && [ "$DAY" -le 30 ] ); then WAIT_SECS=60; else WAIT_SECS=300; fi         cat > oci.env <<EOF
+          DAY=$(date +%-d); DOW=$(date +%u); if [ "$DOW" -ge 6 ] || ( [ "$DAY" -ge 25 ] && [ "$DAY" -le 30 ] ); then WAIT_SECS=60; else WAIT_SECS=300
+        fi
+        cat > oci.env <<EOF
           OCI_CONFIG=$(pwd)/oci_config
           OCT_FREE_AD=$OCT_FREE_AD
           DISPLAY_NAME=$OCI_DISPLAY_NAME
