@@ -40,7 +40,7 @@ jobs:
           cat > oci_config <<EOF
           [DEFAULT]
           user=$OCI_USER_ID
-  WAIT_SECS=300ngerprint=$OCI_KEY_FINGERPRINT
+          fingerprint=$OCI_KEY_FINGERPRINT
           tenancy=$OCI_TENANCY_ID
           region=$OCI_REGION
           key_file=$HOME/.oci/oci_api_private_key.pem
@@ -85,4 +85,4 @@ jobs:
             cat INSTANCE_CREATED
           else
             echo "No instance created this run (out of capacity, will retry)"
-  WAIT_SECS=300
+          fi
