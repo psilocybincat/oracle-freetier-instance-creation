@@ -7,13 +7,11 @@ on:
 
 concurrency:
   group: create-oci-instance
-  cancel-in-progress: false
-
+  cancel-in-progress: true
 jobs:
   create-instance:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
-
+    timeout-minutes: 25
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
