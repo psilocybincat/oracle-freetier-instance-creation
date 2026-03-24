@@ -1,4 +1,4 @@
-name: Create OCI Instance
+name: Create OCI Instance 
 
 on:
   schedule:
