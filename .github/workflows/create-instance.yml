@@ -72,6 +72,12 @@ jobs:
             > oci.env
           printf '%s\n' "$OCI_SSH_PUBLIC_KEY" > id_rsa.pub
 
+      - name: Debug config files
+        run: |
+          echo "=== oci_config ===" && cat oci_config
+          echo "=== oci.env ===" && cat oci.env
+          echo "=== PEM first line ===" && head -1 ~/.oci/oci_api_private_key.pem
+
       - name: Run instance creation script
         run: python main.py
 
