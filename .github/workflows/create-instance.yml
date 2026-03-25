@@ -1,18 +1,37 @@
 name: Create OCI Instance
 
 on:
+# Last updated: 2025-03-25
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/10 * * * *'  # Runs every 10 minutes
   workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: create-oci-instance
+  cancel-in-progress: true
 
 jobs:
   create-instance:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 9
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Keep alive - touch timestamp
+        run: |
+          echo $(date -u +"%Y-%m-%dT%H:%M:%SZ") > .last_run
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add .last_run
+          git diff --staged --quiet || git commit -m "ci: keep-alive $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          git push
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -41,6 +60,7 @@ jobs:
           region=$OCI_REGION
           key_file=$HOME/.oci/oci_api_private_key.pem
           EOF
+
       - name: Write oci.env
         env:
           OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
@@ -64,11 +84,12 @@ jobs:
           OCI_IMAGE_ID=$OCI_IMAGE_ID
           SSH_AUTHORIZED_KEYS_FILE=$(pwd)/id_rsa.pub
           OCI_COMPUTE_SHAPE=VM.Standard.A1.Flex
-          REQUEST_WAIT_TIME_SECS=30
+          REQUEST_WAIT_TIME_SECS=60
           TELEGRAM_TOKEN=$TELEGRAM_TOKEN
           TELEGRAM_USER_ID=$TELEGRAM_USER_ID
           EOF
           echo "$OCI_SSH_PUBLIC_KEY" > id_rsa.pub
+
       - name: Run instance creation script
         run: python main.py
 
