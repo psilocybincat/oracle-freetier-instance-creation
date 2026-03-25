@@ -316,15 +316,19 @@ def execute_oci_command(client, method, *args, **kwargs):
             response = getattr(client, method)(*args, **kwargs)
             data = response.data if hasattr(response, "data") else response
             return data
-        except oci.exceptions.ServiceError as srv_err:
+        except Exception as srv_err:
             data = {"status": srv_err.status,
                     "code": srv_err.code,
                     "message": srv_err.message}
             handle_errors(args, data, logging_step5)
-
-
-def generate_ssh_key_pair(public_key_file: Union[str, Path], private_key_file: Union[str, Path]):
-    """Generates an SSH key pair and saves them to the specified files.
+            if hasattr(srv_err, 'status'):
+                data = {"status": srv_err.status,
+                        "code": srv_err.code,
+                        "message": srv_err.message}
+            else:
+                data = {"status": "unknown",
+                        "code": "NetworkError",
+                        "message": str(srv_err)}    """Generates an SSH key pair and saves them to the specified files.
 
     Args:
         public_key_file :file to save the public key.
@@ -468,7 +472,7 @@ def launch_instance():
                 )
                 instance_exist_flag = check_instance_state_and_write(oci_tenancy, OCI_COMPUTE_SHAPE)
 
-        except oci.exceptions.ServiceError as srv_err:
+        except Exception as srv_err:
             if srv_err.code == "LimitExceeded":                
                 logging_step5.info("Encoundered LimitExceeded Error checking if instance is created" \
                                    "code :%s, message: %s, status: %s", srv_err.code, srv_err.message, srv_err.status)                
