@@ -317,10 +317,6 @@ def execute_oci_command(client, method, *args, **kwargs):
             data = response.data if hasattr(response, "data") else response
             return data
         except Exception as srv_err:
-            data = {"status": srv_err.status,
-                    "code": srv_err.code,
-                    "message": srv_err.message}
-            handle_errors(args, data, logging_step5)
             if hasattr(srv_err, 'status'):
                 data = {"status": srv_err.status,
                         "code": srv_err.code,
@@ -329,8 +325,7 @@ def execute_oci_command(client, method, *args, **kwargs):
                 data = {"status": "unknown",
                         "code": "NetworkError",
                         "message": str(srv_err)}
-                        handle_errors(args, data, logging_step5)
-
+        handle_errors(args, data, logging_step5)
 def generate_ssh_key_pair(public_key_file: Union[str, Path], private_key_file: Union[str, Path]):
     """Generates an SSH key pair and saves them to the specified files.
 
