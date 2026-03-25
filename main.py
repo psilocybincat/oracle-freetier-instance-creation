@@ -329,7 +329,7 @@ def execute_oci_command(client, method, *args, **kwargs):
                 data = {"status": "unknown",
                         "code": "NetworkError",
                         "message": str(srv_err)}
-                            handle_errors(args, data, logging_step5)
+                        handle_errors(args, data, logging_step5)
 
 def generate_ssh_key_pair(public_key_file: Union[str, Path], private_key_file: Union[str, Path]):
     """Generates an SSH key pair and saves them to the specified files.
