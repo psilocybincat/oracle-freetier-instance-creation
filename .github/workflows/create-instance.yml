@@ -1,9 +1,8 @@
 name: Create OCI Instance
 
 on:
-# Last updated: 2025-03-25
   schedule:
-    - cron: '*/360 * * * *'  # Runs every 360 minutes
+    - cron: '0 */6 * * *'   # каждые 6 часов, ровно
   workflow_dispatch:
 
 permissions:
@@ -16,7 +15,7 @@ concurrency:
 jobs:
   create-instance:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 350   # чуть меньше 6ч, чтобы не наезжать на следующий запуск
 
     steps:
       - name: Checkout repository
@@ -30,8 +29,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git add .last_run
-          git diff --staged --quiet || git commit -m "ci: keep-alive $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-          git push
+          git diff --staged --quiet || (git pull --rebase && git commit -m "ci: keep-alive $(date -u +"%Y-%m-%dT%H:%M:%SZ")" && git push)
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -50,45 +48,40 @@ jobs:
           OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.oci
-          echo "$OCI_PRIVATE_KEY" > ~/.oci/oci_api_private_key.pem
+          printf '%s' "$OCI_PRIVATE_KEY" > ~/.oci/oci_api_private_key.pem
           chmod 600 ~/.oci/oci_api_private_key.pem
-          cat > oci_config <<EOF
-          [DEFAULT]
-          user=$OCI_USER_ID
-          fingerprint=$OCI_KEY_FINGERPRINT
-          tenancy=$OCI_TENANCY_ID
-          region=$OCI_REGION
-          key_file=$HOME/.oci/oci_api_private_key.pem
-          EOF
+          cat > oci_config << EOF
+[DEFAULT]
+user=$OCI_USER_ID
+fingerprint=$OCI_KEY_FINGERPRINT
+tenancy=$OCI_TENANCY_ID
+region=$OCI_REGION
+key_file=$HOME/.oci/oci_api_private_key.pem
+EOF
 
       - name: Write oci.env
         env:
-          OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
-          OCI_TENANCY_ID: ${{ secrets.OCI_TENANCY_ID }}
-          OCI_REGION: ${{ secrets.OCI_REGION }}
           OCI_SUBNET_ID: ${{ secrets.OCI_SUBNET_ID }}
           OCI_IMAGE_ID: ${{ secrets.OCI_IMAGE_ID }}
           OCI_SSH_PUBLIC_KEY: ${{ secrets.OCI_SSH_PUBLIC_KEY }}
           OCI_DISPLAY_NAME: ${{ secrets.OCI_DISPLAY_NAME }}
-          OCI_OCPUS: ${{ secrets.OCI_OCPUS }}
-          OCI_MEMORY_IN_GBS: ${{ secrets.OCI_MEMORY_IN_GBS }}
           OCT_FREE_AD: ${{ secrets.OCI_AVAILABILITY_DOMAINS }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_USER_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          cat > oci.env <<EOF
-          OCI_CONFIG=$(pwd)/oci_config
-          OCT_FREE_AD=$OCT_FREE_AD
-          DISPLAY_NAME=$OCI_DISPLAY_NAME
-          OCI_SUBNET_ID=$OCI_SUBNET_ID
-          OCI_IMAGE_ID=$OCI_IMAGE_ID
-          SSH_AUTHORIZED_KEYS_FILE=$(pwd)/id_rsa.pub
-          OCI_COMPUTE_SHAPE=VM.Standard.A1.Flex
-          REQUEST_WAIT_TIME_SECS=30
-          TELEGRAM_TOKEN=$TELEGRAM_TOKEN
-          TELEGRAM_USER_ID=$TELEGRAM_USER_ID
-          EOF
-          echo "$OCI_SSH_PUBLIC_KEY" > id_rsa.pub
+          cat > oci.env << EOF
+OCI_CONFIG=$(pwd)/oci_config
+OCT_FREE_AD=$OCT_FREE_AD
+DISPLAY_NAME=$OCI_DISPLAY_NAME
+OCI_SUBNET_ID=$OCI_SUBNET_ID
+OCI_IMAGE_ID=$OCI_IMAGE_ID
+SSH_AUTHORIZED_KEYS_FILE=$(pwd)/id_rsa.pub
+OCI_COMPUTE_SHAPE=VM.Standard.A1.Flex
+REQUEST_WAIT_TIME_SECS=30
+TELEGRAM_TOKEN=$TELEGRAM_TOKEN
+TELEGRAM_USER_ID=$TELEGRAM_USER_ID
+EOF
+          printf '%s' "$OCI_SSH_PUBLIC_KEY" > id_rsa.pub
 
       - name: Run instance creation script
         run: python main.py
