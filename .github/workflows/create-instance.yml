@@ -50,15 +50,10 @@ jobs:
           mkdir -p ~/.oci
           printf '%s\n' "$OCI_PRIVATE_KEY" > ~/.oci/oci_api_private_key.pem
           chmod 600 ~/.oci/oci_api_private_key.pem
-          WORKDIR=$(pwd)
-          cat > oci_config << EOF
-[DEFAULT]
-user=$OCI_USER_ID
-fingerprint=$OCI_KEY_FINGERPRINT
-tenancy=$OCI_TENANCY_ID
-region=$OCI_REGION
-key_file=$HOME/.oci/oci_api_private_key.pem
-EOF
+          KEY_FILE="$HOME/.oci/oci_api_private_key.pem"
+          printf '[DEFAULT]\nuser=%s\nfingerprint=%s\ntenancy=%s\nregion=%s\nkey_file=%s\n' \
+            "$OCI_USER_ID" "$OCI_KEY_FINGERPRINT" "$OCI_TENANCY_ID" "$OCI_REGION" "$KEY_FILE" \
+            > oci_config
 
       - name: Write oci.env
         env:
@@ -71,18 +66,10 @@ EOF
           TELEGRAM_USER_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           WORKDIR=$(pwd)
-          cat > oci.env << EOF
-OCI_CONFIG=$WORKDIR/oci_config
-OCT_FREE_AD=$OCT_FREE_AD
-DISPLAY_NAME=$OCI_DISPLAY_NAME
-OCI_SUBNET_ID=$OCI_SUBNET_ID
-OCI_IMAGE_ID=$OCI_IMAGE_ID
-SSH_AUTHORIZED_KEYS_FILE=$WORKDIR/id_rsa.pub
-OCI_COMPUTE_SHAPE=VM.Standard.A1.Flex
-REQUEST_WAIT_TIME_SECS=30
-TELEGRAM_TOKEN=$TELEGRAM_TOKEN
-TELEGRAM_USER_ID=$TELEGRAM_USER_ID
-EOF
+          printf 'OCI_CONFIG=%s/oci_config\nOCT_FREE_AD=%s\nDISPLAY_NAME=%s\nOCI_SUBNET_ID=%s\nOCI_IMAGE_ID=%s\nSSH_AUTHORIZED_KEYS_FILE=%s/id_rsa.pub\nOCI_COMPUTE_SHAPE=VM.Standard.A1.Flex\nREQUEST_WAIT_TIME_SECS=10\nTELEGRAM_TOKEN=%s\nTELEGRAM_USER_ID=%s\n' \
+            "$WORKDIR" "$OCT_FREE_AD" "$OCI_DISPLAY_NAME" "$OCI_SUBNET_ID" "$OCI_IMAGE_ID" \
+            "$WORKDIR" "$TELEGRAM_TOKEN" "$TELEGRAM_USER_ID" \
+            > oci.env
           printf '%s\n' "$OCI_SSH_PUBLIC_KEY" > id_rsa.pub
 
       - name: Run instance creation script
