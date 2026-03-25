@@ -2,7 +2,7 @@ name: Create OCI Instance
 
 on:
   schedule:
-    - cron: '0 */6 * * *'   # каждые 6 часов, ровно
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -15,7 +15,7 @@ concurrency:
 jobs:
   create-instance:
     runs-on: ubuntu-latest
-    timeout-minutes: 350   # чуть меньше 6ч, чтобы не наезжать на следующий запуск
+    timeout-minutes: 350
 
     steps:
       - name: Checkout repository
@@ -48,8 +48,9 @@ jobs:
           OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.oci
-          printf '%s' "$OCI_PRIVATE_KEY" > ~/.oci/oci_api_private_key.pem
+          printf '%s\n' "$OCI_PRIVATE_KEY" > ~/.oci/oci_api_private_key.pem
           chmod 600 ~/.oci/oci_api_private_key.pem
+          WORKDIR=$(pwd)
           cat > oci_config << EOF
 [DEFAULT]
 user=$OCI_USER_ID
@@ -69,19 +70,20 @@ EOF
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_USER_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
+          WORKDIR=$(pwd)
           cat > oci.env << EOF
-OCI_CONFIG=$(pwd)/oci_config
+OCI_CONFIG=$WORKDIR/oci_config
 OCT_FREE_AD=$OCT_FREE_AD
 DISPLAY_NAME=$OCI_DISPLAY_NAME
 OCI_SUBNET_ID=$OCI_SUBNET_ID
 OCI_IMAGE_ID=$OCI_IMAGE_ID
-SSH_AUTHORIZED_KEYS_FILE=$(pwd)/id_rsa.pub
+SSH_AUTHORIZED_KEYS_FILE=$WORKDIR/id_rsa.pub
 OCI_COMPUTE_SHAPE=VM.Standard.A1.Flex
 REQUEST_WAIT_TIME_SECS=30
 TELEGRAM_TOKEN=$TELEGRAM_TOKEN
 TELEGRAM_USER_ID=$TELEGRAM_USER_ID
 EOF
-          printf '%s' "$OCI_SSH_PUBLIC_KEY" > id_rsa.pub
+          printf '%s\n' "$OCI_SSH_PUBLIC_KEY" > id_rsa.pub
 
       - name: Run instance creation script
         run: python main.py
